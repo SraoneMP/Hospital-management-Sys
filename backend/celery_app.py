@@ -6,12 +6,12 @@ from celery.schedules import crontab
 # CONFIGURE REMINDER AND REPORT TIMES HERE
 # ============================================================================
 # Change these values to adjust when tasks run, then restart Celery Beat
-DAILY_REMINDER_HOUR = 13        # Hour in 24-hour format (0-23)
-DAILY_REMINDER_MINUTE = 53      # Minute (0-59)
+DAILY_REMINDER_HOUR = 8        # Hour in 24-hour format (0-23)
+DAILY_REMINDER_MINUTE = 1      # Minute (0-59)
 
-MONTHLY_REPORT_DAY = '29'        # Day of month (1-31) - use string format
-MONTHLY_REPORT_HOUR = 13         # Hour in 24-hour format (0-23)
-MONTHLY_REPORT_MINUTE = 53       # Minute (0-59)
+MONTHLY_REPORT_DAY = '1'        # Day of month (1-31) - use string format
+MONTHLY_REPORT_HOUR = 8         # Hour in 24-hour format (0-23)
+MONTHLY_REPORT_MINUTE = 1      # Minute (0-59)
 # ============================================================================
 
 def make_celery():

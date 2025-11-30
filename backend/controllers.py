@@ -21,6 +21,7 @@ from models import (
 from flask_jwt_extended import (
     create_access_token,
     get_jwt_identity,
+    get_jwt,
     jwt_required,
 )
 
@@ -37,17 +38,28 @@ try:
     redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 except Exception:
     redis_client = None
+
+def get_current_user():
+    """Helper to get current user_id and role from JWT"""
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    role = claims.get("role")
+    return {"user_id": int(user_id), "role": role}
+
 #helpr functions for access according to roless
 def require_roles(*roles):
     def wrapper(fn):
         @wraps(fn)
         @jwt_required()
         def decorated(*args, **kwargs):
-            # pull identity...
-            who = get_jwt_identity()
-            if not who or "role" not in who:
+            # pull identity and claims
+            user_id = get_jwt_identity()
+            claims = get_jwt()
+            user_role = claims.get("role")
+            
+            if not user_id or not user_role:
                 return {"message": "Unauthorized"}, 401
-            if roles and who["role"] not in roles:
+            if roles and user_role not in roles:
                 return {"message": "Forbidden"}, 403
             return fn(*args, **kwargs)
 
@@ -117,8 +129,7 @@ class Authentication(Resource):
         user.last_login = datetime.utcnow()
         db.session.commit()
 
-        identity = {"user_id": user.id, "role": user.role}
-        token = create_access_token(identity=identity)
+        token = create_access_token(identity=str(user.id), additional_claims={"role": user.role})
 
         return {
             "message": "Login successful",
@@ -368,7 +379,7 @@ class AdminPatients(Resource):
 class DoctorAvailabilityResource(Resource):
     @require_roles("doctor")
     def get(self):
-        ident = get_jwt_identity()
+        ident = get_current_user()
         doc = DoctorProfile.query.filter_by(user_id=ident["user_id"]).first()
         if not doc:
             return {"message": "Doctor profile not found"}, 404
@@ -380,7 +391,7 @@ class DoctorAvailabilityResource(Resource):
     @require_roles("doctor")
     def post(self):
         """Add availability slots. Payload: [{date:'YYYY-MM-DD', start:'HH:MM', end:'HH:MM'}, ...]"""
-        ident = get_jwt_identity()
+        ident = get_current_user()
         doc = DoctorProfile.query.filter_by(user_id=ident["user_id"]).first()
         if not doc:
             return {"message": "Doctor profile not found"}, 404
@@ -568,7 +579,7 @@ class Appointments(Resource):
     @require_roles("patient", "doctor", "admin")
     def get(self):
         """List appointments depending on role"""
-        ident = get_jwt_identity()
+        ident = get_current_user()
         role = ident["role"]
         user_id = ident["user_id"]
 
@@ -609,7 +620,7 @@ class Appointments(Resource):
     @require_roles("patient")
     def post(self):
         """Book an appointment. Payload: doctor_id, date(YYYY-MM-DD), time(HH:MM), reason"""
-        ident = get_jwt_identity()
+        ident = get_current_user()
         user_id = ident["user_id"]
         prof = PatientProfile.query.filter_by(user_id=user_id).first()
         if not prof:
@@ -675,7 +686,7 @@ class AppointmentDetail(Resource):
     @require_roles("patient", "admin", "doctor")
     def delete(self, appointment_id):
         """Cancel an appointment (patient or admin)"""
-        ident = get_jwt_identity()
+        ident = get_current_user()
         role = ident["role"]
         user_id = ident["user_id"]
 
@@ -720,7 +731,7 @@ class AppointmentDetail(Resource):
     @require_roles("patient")
     def patch(self, appointment_id):
         """Reschedule appointment (only if still Booked)"""
-        ident = get_jwt_identity()
+        ident = get_current_user()
         prof = PatientProfile.query.filter_by(user_id=ident["user_id"]).first()
         if not prof:
             return {"message": "Patient profile not found"}, 404
@@ -782,7 +793,7 @@ class TreatmentResource(Resource):
     @require_roles("doctor", "patient")
     def get(self, appointment_id):
         """Fetch treatment details for an appointment (doctor or patient with access)."""
-        ident = get_jwt_identity()
+        ident = get_current_user()
         appt = Appointment.query.get(appointment_id)
         if not appt:
             return {"message": "Treatment not found"}, 404
@@ -805,7 +816,7 @@ class TreatmentResource(Resource):
     @require_roles("doctor")
     def post(self, appointment_id):
         """Mark as completed with treatment details"""
-        ident = get_jwt_identity()
+        ident = get_current_user()
         doc = DoctorProfile.query.filter_by(user_id=ident["user_id"]).first()
         if not doc:
             return {"message": "Doctor profile not found"}, 404
@@ -858,7 +869,7 @@ class TreatmentResource(Resource):
     @require_roles("doctor")
     def put(self, appointment_id):
         """Update treatment notes (if already exists)"""
-        ident = get_jwt_identity()
+        ident = get_current_user()
         doc = DoctorProfile.query.filter_by(user_id=ident["user_id"]).first()
         if not doc:
             return {"message": "Doctor profile not found"}, 404
@@ -1008,7 +1019,7 @@ class AdminAnalytics(Resource):
 class DoctorDashboard(Resource):
     @require_roles("doctor")
     def get(self):
-        ident = get_jwt_identity()
+        ident = get_current_user()
         doc = DoctorProfile.query.filter_by(user_id=ident["user_id"]).first()
         if not doc:
             return {"message": "Doctor profile not found"}, 404
@@ -1042,7 +1053,7 @@ class DoctorDashboard(Resource):
 class PatientDashboard(Resource):
     @require_roles("patient")
     def get(self):
-        ident = get_jwt_identity()
+        ident = get_current_user()
         prof = PatientProfile.query.filter_by(user_id=ident["user_id"]).first()
         if not prof:
             return {"message": "Patient profile not found"}, 404
@@ -1079,7 +1090,7 @@ class PatientDashboard(Resource):
 class PatientProfileResource(Resource):
     @require_roles("patient")
     def get(self):
-        ident = get_jwt_identity()
+        ident = get_current_user()
         prof = PatientProfile.query.filter_by(user_id=ident["user_id"]).first()
         if not prof:
             return {"message": "Patient profile not found"}, 404
@@ -1092,7 +1103,7 @@ class PatientProfileResource(Resource):
     @require_roles("patient")
     def put(self):
         """Update own profile fields"""
-        ident = get_jwt_identity()
+        ident = get_current_user()
         prof = PatientProfile.query.filter_by(user_id=ident["user_id"]).first()
         if not prof:
             return {"message": "Patient profile not found"}, 404
@@ -1127,7 +1138,7 @@ class DoctorPatientHistory(Resource):
     @require_roles("doctor")
     def get(self, patient_id: int):
         """Return full history between this doctor and the specified patient"""
-        ident = get_jwt_identity()
+        ident = get_current_user()
         doc = DoctorProfile.query.filter_by(user_id=ident["user_id"]).first()
         if not doc:
             return {"message": "Doctor profile not found"}, 404
@@ -1161,7 +1172,7 @@ class ExportTreatmentCSV(Resource):
     @require_roles("patient")
     def post(self):
         """User-triggered export (synchronous CSV generation). For async, wire this to a Celery task."""
-        ident = get_jwt_identity()
+        ident = get_current_user()
         user_id = ident["user_id"]
         prof = PatientProfile.query.filter_by(user_id=user_id).first()
         if not prof:
@@ -1260,7 +1271,7 @@ class ExportTreatmentAsync(Resource):
     @require_roles("patient")
     def post(self):
         """Trigger async CSV export of patient's treatments via Celery"""
-        ident = get_jwt_identity()
+        ident = get_current_user()
         user_id = ident["user_id"]
 
         job = ExportJob(user_id=user_id, job_type="patient_treatments_csv", status="pending")

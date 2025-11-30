@@ -38,11 +38,12 @@ db_path = os.getenv("SQLITE_PATH", "hms.db")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", f"sqlite:///{db_path}")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "change_this_jwt_secret_in_prod")
-app.config["JWT_VERIFY_SUB"] = False  
+app.config["JWT_IDENTITY_CLAIM"] = "sub"
+app.config["JWT_ERROR_MESSAGE_KEY"] = "message"
 
 # CORS 
-frontend_origin_url = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
-CORS(app, resources={r"/api/*": {"origins": frontend_origin_url}})
+frontend_origins = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173,http://localhost:5174")
+CORS(app, resources={r"/api/*": {"origins": frontend_origins.split(",")}})
 
 # Extensions
 jwt = JWTManager(app)
