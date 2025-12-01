@@ -303,7 +303,7 @@ class AdminDoctorDetail(Resource):
             profile.user.is_active = False
         db.session.commit()
         
-        # Clear doctor search cache when doctor is deactivated
+        # Clear doctor search cache  when doctor is deactivated
         if redis_client:
             try:
                 for key in redis_client.scan_iter("doc_search:*"):
