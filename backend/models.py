@@ -5,7 +5,7 @@ from sqlalchemy import UniqueConstraint, event, text
 
 db = SQLAlchemy()
 
-# Users and profiles (kept straightforward)
+# Users and profiles models
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
@@ -271,7 +271,7 @@ class ExportJob(db.Model):
         }
 
 
-# Database setup and a bit of seeding
+# Database setup and admin cration by default with some departments etc
 def ensure_availability_fee_column():
     """If the fee column is missing on doctor_availability, add it (SQLite ALTER)."""
     try:
