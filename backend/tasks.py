@@ -24,14 +24,13 @@ from models import (
 )
 
 # ============================================================================
-# EMAIL CONFIGURATION - Customize these values
+# EMAIL CONFIG
 # ============================================================================
 SMTP_HOST = os.getenv("SMTP_HOST", "localhost")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "1025"))
 SENDER_EMAIL = os.getenv("SMTP_FROM", "noreply@hospital.com")
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASS", "")
-# MailHog doesn't support STARTTLS, so default to false for localhost
 SMTP_USE_STARTTLS = os.getenv("SMTP_STARTTLS", "false").lower() == "true"
 
 
