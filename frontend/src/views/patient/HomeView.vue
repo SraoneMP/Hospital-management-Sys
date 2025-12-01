@@ -193,7 +193,7 @@ onMounted(fetchDashboard)
           </div>
         </div>
 
-        <!-- Past appointments & treatments -->
+        <!-- Past appointments & treatments tht is done -->
         <div class="col-12">
           <div class="card">
             <div class="card-body">
