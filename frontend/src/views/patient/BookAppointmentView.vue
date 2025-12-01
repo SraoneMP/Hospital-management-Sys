@@ -126,6 +126,82 @@
       </div>
     </div>
 
+    <!-- Payment Modal -->
+    <div v-if="showPayment" class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">💳 Payment Details</h5>
+            <button type="button" class="btn-close" @click="closePayment"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="processPayment" class="row g-3">
+              <div class="col-12">
+                <div class="alert alert-info">
+                  <strong>Amount to pay:</strong> ₹{{ openSlots.find(s => s.id === pick.slotKey)?.fee || 500 }}
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Card Number</label>
+                <input 
+                  v-model="paymentForm.cardNumber" 
+                  class="form-control" 
+                  placeholder="1234 5678 9012 3456"
+                  maxlength="16"
+                  required
+                />
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Cardholder Name</label>
+                <input 
+                  v-model="paymentForm.cardName" 
+                  class="form-control" 
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+
+              <div class="col-6">
+                <label class="form-label">Expiry (MM/YY)</label>
+                <input 
+                  v-model="paymentForm.expiry" 
+                  class="form-control" 
+                  placeholder="12/25"
+                  maxlength="5"
+                  required
+                />
+              </div>
+
+              <div class="col-6">
+                <label class="form-label">CVV</label>
+                <input 
+                  v-model="paymentForm.cvv" 
+                  class="form-control" 
+                  placeholder="123"
+                  maxlength="3"
+                  type="password"
+                  required
+                />
+              </div>
+
+              <div class="col-12" v-if="bookErr">
+                <div class="alert alert-danger">{{ bookErr }}</div>
+              </div>
+
+              <div class="col-12 d-flex gap-2 justify-content-end">
+                <button class="btn btn-success" type="submit" :disabled="paymentBusy">
+                  {{ paymentBusy ? 'Processing...' : '💰 Pay Now' }}
+                </button>
+                <button class="btn btn-secondary" type="button" @click="closePayment" :disabled="paymentBusy">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -153,6 +229,16 @@ const slotBusy = ref(false)
 const bookErr = ref('')
 const bookOk = ref('')
 const bookBusy = ref(false)
+
+// payment modal state
+const showPayment = ref(false)
+const paymentBusy = ref(false)
+const paymentForm = ref({
+  cardNumber: '',
+  cardName: '',
+  expiry: '',
+  cvv: ''
+})
 
 // pull dept/specialization from URL if present and auto search
 const route = useRoute()
@@ -238,8 +324,27 @@ async function placeBooking() {
     bookErr.value = 'Please select a slot.'
     return
   }
+  
+  // Show payment modal instead of booking directly
+  showPayment.value = true
+}
+
+async function processPayment() {
+  // Validate payment form (simple check)
+  if (!paymentForm.value.cardNumber || !paymentForm.value.cardName || 
+      !paymentForm.value.expiry || !paymentForm.value.cvv) {
+    bookErr.value = 'Please fill all payment details'
+    return
+  }
+
   try {
-    bookBusy.value = true
+    paymentBusy.value = true
+    bookErr.value = ''
+    
+    // Simulate payment processing
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    // Now book the appointment
     const payload = {
       doctor_id: chosenDoc.value.id,
       date: pick.value.date,
@@ -247,14 +352,27 @@ async function placeBooking() {
       reason: pick.value.note
     }
     await axios.post('/api/appointments', payload, { headers: auth })
-    bookOk.value = 'Appointment booked!'
+    
+    bookOk.value = 'Payment successful! Appointment booked!'
+    showPayment.value = false
+    
     setTimeout(() => {
       closeSheet()
-    }, 1200)
+    }, 1500)
   } catch (err) {
     bookErr.value = err?.response?.data?.message || 'Booking failed'
   } finally {
-    bookBusy.value = false
+    paymentBusy.value = false
+  }
+}
+
+function closePayment() {
+  showPayment.value = false
+  paymentForm.value = {
+    cardNumber: '',
+    cardName: '',
+    expiry: '',
+    cvv: ''
   }
 }
 </script>
