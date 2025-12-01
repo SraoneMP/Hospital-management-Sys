@@ -134,7 +134,7 @@ const renderTopDocs = () => {
 
 const renderAllCharts = () => {
   destroyCharts()
-  // Use nextTick again to ensure DOM is ready after v-else condition changes
+  // Use nextTick again to ensure DOM is ready after v-else condition changes fix for the chart not loding problem
   nextTick(() => {
     renderDeptPie()
     renderRevenueBar()
