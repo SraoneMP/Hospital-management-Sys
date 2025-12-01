@@ -33,7 +33,7 @@ Web-based hospital management system using Flask (backend) and Vue.js (frontend)
 ### Redis & Celery
 Start Redis, then in backend:
 ```powershell
-celery -A celery_app worker --loglevel=info
+celery -A celery_app worker --pool=solo --loglevel=info
 celery -A celery_app beat --loglevel=info
 ```
 ### MailHog (Email Testing)
