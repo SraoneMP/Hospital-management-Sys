@@ -25,7 +25,7 @@ function dropRow(i) {
   }
 }
 
-// save availability windows; nothing groundbreaking
+// save availability windows for the bookkings to happen
 async function saveAvailability() {
   try {
     const clean = availRows.value
