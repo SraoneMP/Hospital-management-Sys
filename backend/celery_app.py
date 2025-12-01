@@ -3,9 +3,9 @@ from celery import Celery
 from celery.schedules import crontab
 
 # ============================================================================
-# CONFIGURE REMINDER AND REPORT TIMES HERE
-# ============================================================================
-# Change these values to adjust when tasks run, then restart Celery Beat
+# Setting the  REMINDER AND REPORT TIMES HERE
+
+
 DAILY_REMINDER_HOUR = 8        # Hour in 24-hour format (0-23)
 DAILY_REMINDER_MINUTE = 1      # Minute (0-59)
 
