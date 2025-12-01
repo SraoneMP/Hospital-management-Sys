@@ -375,7 +375,7 @@ class AdminPatients(Resource):
         return {"message": "Patient deactivated"}, 200
 
 
-# ---------------------- Doctor Availability ----------------------
+#  Doctor Availability ----------------------
 class DoctorAvailabilityResource(Resource):
     @require_roles("doctor")
     def get(self):
@@ -426,7 +426,7 @@ class DoctorAvailabilityResource(Resource):
         return {"message": "Availability added", "slots": created}, 201
 
 
-# ---------------------- Doctor Slots (for patients) ----------------------
+# Doctor Slots (for patients) ----------------------
 class DoctorSlots(Resource):
     @require_roles("patient", "admin")
     def get(self, doctor_id):
@@ -651,7 +651,7 @@ class Appointments(Resource):
         if not avail:
             return {"message": "Selected time not in doctor's availability"}, 409
 
-        # Create appointment (DB UniqueConstraint prevents double booking for same doctor and slot)
+        # Create appointment (DB UniqueConstraint is there so it prevents double booking for same doctor and slot)
         appt = Appointment(
             doctor_id=doc.id,
             patient_id=prof.id,
@@ -788,7 +788,7 @@ class AppointmentDetail(Resource):
         return {"message": "Appointment rescheduled", "appointment": appt.to_dict()}, 200
 
 
-# ---------------------- Treatments (Doctor) ----------------------
+# -- Treatments (Doctor) ----------------------
 class TreatmentResource(Resource):
     @require_roles("doctor", "patient")
     def get(self, appointment_id):
