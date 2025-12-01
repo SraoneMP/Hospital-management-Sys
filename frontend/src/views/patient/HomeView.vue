@@ -102,7 +102,7 @@ onMounted(fetchDashboard)
 
     <div v-else>
       <div class="row g-3">
-        <!-- Departments -->
+        <!-- Departments available -->
         <div class="col-12">
           <div class="card h-100 mb-2">
             <div class="card-body">
